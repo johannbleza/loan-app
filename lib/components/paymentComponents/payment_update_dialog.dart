@@ -8,11 +8,15 @@ import 'package:loan_app/utils/globals.dart';
 
 class PaymentUpdateDialog extends StatefulWidget {
   final VoidCallback onPaymentStatusUpdated;
+  final double? remainingInterestPaid;
+  final double? remainingCapitalPayment;
   final Payment payment;
   const PaymentUpdateDialog({
     super.key,
     required this.payment,
     required this.onPaymentStatusUpdated,
+    this.remainingInterestPaid,
+    this.remainingCapitalPayment,
   });
 
   @override
@@ -72,6 +76,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   value: 'Partial (Capital)',
                 ),
                 DropdownMenuEntry(label: "Paid", value: 'Paid'),
+                DropdownMenuEntry(label: "Fully Paid", value: 'Fully Paid'),
               ],
               onSelected: (value) {
                 setState(() {
@@ -147,8 +152,6 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               );
             }
 
-            widget.onPaymentStatusUpdated();
-
             // Delete Balance Sheet First
             balanceSheetCrud.deleteBalanceSheetByPaymentId(
               widget.payment.paymentId!,
@@ -164,7 +167,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.monthlyPayment,
                   remarks:
-                      'Payment for ${widget.payment.clientName} - ${widget.payment.paymentSchedule}',
+                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
@@ -176,7 +179,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.interestPaid,
                   remarks:
-                      'Partial Payment for ${widget.payment.clientName} - ${widget.payment.paymentSchedule}',
+                      '${widget.payment.clientName} - Partial Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
@@ -188,10 +191,34 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.capitalPayment,
                   remarks:
-                      'Partial Payment for ${widget.payment.clientName} - ${widget.payment.paymentSchedule}',
+                      '${widget.payment.clientName} - Partial Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
+            }
+
+            // If Fully Paid
+            if (_remarksController.text == 'Fully Paid') {
+              paymentCrud.setPaymentRemarksToCompleted(widget.payment.clientId);
+              balanceSheetCrud.createBalanceSheet(
+                BalanceSheet(
+                  date: _paymentDateController.text,
+                  inAmount:
+                      widget.remainingCapitalPayment! +
+                      widget.remainingInterestPaid!,
+                  outAmount: 0,
+                  balance:
+                      widget.remainingCapitalPayment! +
+                      widget.remainingInterestPaid!,
+                  remarks:
+                      '${widget.payment.clientName} - Fully Paid for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                  paymentId: widget.payment.paymentId,
+                ),
+              );
+            }
+
+            if (_remarksController.text != 'Fully Paid') {
+              paymentCrud.setPaymentRemarksToDue(widget.payment.clientId);
             }
 
             // Show a success message
@@ -201,6 +228,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                 duration: Duration(seconds: 2),
               ),
             );
+            widget.onPaymentStatusUpdated();
             Navigator.pop(context);
           },
           child: Text("Update"),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loan_app/components/balanceSheetComponents/entry_add_dialog.dart';
 import 'package:loan_app/components/balanceSheetComponents/entry_delete_dialog.dart';
+import 'package:loan_app/components/balanceSheetComponents/entry_update_dialog.dart';
 import 'package:loan_app/models/balanceSheet.dart';
 
 class BalanceSheetTable extends StatefulWidget {
@@ -78,18 +79,39 @@ class _BalanceSheetTableState extends State<BalanceSheetTable> {
               DataCell(Text(sheet.remarks.toString())),
               DataCell(
                 Center(
-                  child: IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (context) => EntryDeleteDialog(
-                              onConfirmDelete: widget.refreshBalanceSheetTable,
-                              balanceSheetId: sheet.balanceSheetId!,
-                            ),
-                      );
-                    },
-                    icon: Icon(Icons.delete),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => EntryUpdateDialog(
+                                  onEntryUpdated: () {
+                                    widget.refreshBalanceSheetTable();
+                                  },
+                                  balanceSheet: sheet,
+                                ),
+                          );
+                        },
+                        icon: Icon(Icons.edit),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => EntryDeleteDialog(
+                                  onConfirmDelete:
+                                      widget.refreshBalanceSheetTable,
+                                  balanceSheetId: sheet.balanceSheetId!,
+                                ),
+                          );
+                        },
+                        icon: Icon(Icons.delete),
+                      ),
+                    ],
                   ),
                 ),
               ),

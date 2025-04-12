@@ -33,6 +33,14 @@ class _HomeOverviewScreenState extends State<HomeOverviewScreen> {
             var dateB = Jiffy.parse(b.paymentSchedule, pattern: 'MMM d, yyyy');
             return dateA.date.compareTo(dateB.date);
           });
+    payments =
+        payments
+            .where(
+              (payment) =>
+                  payment.remarks != "Completed" &&
+                  payment.remarks != "Fully Paid",
+            )
+            .toList();
 
     setState(() {
       paymentsData = payments;
@@ -64,7 +72,7 @@ class _HomeOverviewScreenState extends State<HomeOverviewScreen> {
                   ),
                   SizedBox(height: 20),
                   paymentsData.isEmpty
-                      ? Text("Empty")
+                      ? SizedBox()
                       : MonthlyStatsRow(paymentsData: paymentsData),
                   SizedBox(height: 20),
                   Text(

@@ -49,4 +49,15 @@ class BalanceSheetCrud {
       whereArgs: [balanceSheetId],
     );
   }
+
+  // Update Balance Sheet
+  Future<void> updateBalanceSheet(BalanceSheet balanceSheet) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'balanceSheet',
+      balanceSheet.toMap(),
+      where: 'balanceSheetId = ?',
+      whereArgs: [balanceSheet.balanceSheetId],
+    );
+  }
 }

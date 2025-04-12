@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:loan_app/components/utilComponents/select_date_button.dart';
 import 'package:loan_app/models/balanceSheet.dart';
 import 'package:loan_app/models/partial.dart';
@@ -124,7 +125,7 @@ class _PartialUpdateDialogState extends State<PartialUpdateDialog> {
                       widget.partial.capitalPayment +
                       widget.partial.interestPaid,
                   remarks:
-                      'Partial Completed for ${widget.partial.clientName} - ${widget.partial.paymentSchedule}',
+                      '${widget.partial.clientName} - Partial Payment Completed for ${Jiffy.parse(widget.partial.paymentSchedule!, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   partialId: widget.partial.partialId,
                 ),
               );

@@ -14,6 +14,14 @@ class TermCompleted extends StatefulWidget {
 class _TermCompletedState extends State<TermCompleted> {
   List<Payment> paymentsData = [];
   List<Partial> partialsData = [];
+  bool isFullyPaid() {
+    for (var payment in paymentsData) {
+      if (payment.remarks == "Fully Paid") {
+        return true;
+      }
+    }
+    return false;
+  }
 
   getPayments() async {
     var payments = await paymentCrud.getAllPaymentsByClientId(widget.clientId);
@@ -53,7 +61,9 @@ class _TermCompletedState extends State<TermCompleted> {
   @override
   Widget build(BuildContext context) {
     return Text(
-      "${getTotalTermsCompleted().toString()}/${paymentsData.length + partialsData.length}",
+      isFullyPaid()
+          ? "${paymentsData.length + partialsData.length}/${paymentsData.length + partialsData.length}"
+          : "${getTotalTermsCompleted().toString()}/${paymentsData.length + partialsData.length}",
     );
   }
 }

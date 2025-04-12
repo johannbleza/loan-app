@@ -64,7 +64,14 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
               ),
               DataCell(Text(payment.paymentSchedule)),
               DataCell(
-                Center(child: TermCompleted(clientId: payment.clientId)),
+                Center(
+                  child: TermCompleted(
+                    clientId: payment.clientId,
+                    key: ValueKey(
+                      'term_${payment.clientId}_${DateTime.now().millisecondsSinceEpoch}',
+                    ),
+                  ),
+                ),
               ),
               DataCell(
                 Text(
@@ -74,6 +81,12 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
               DataCell(
                 Text(
                   '₱${payment.monthlyPayment.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                  style: TextStyle(
+                    color:
+                        payment.remarks == "Fully Paid"
+                            ? Colors.green
+                            : Colors.black,
+                  ),
                 ),
               ),
               DataCell(
@@ -116,7 +129,8 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
                 TextButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(
-                      payment.remarks == "Paid"
+                      payment.remarks == "Paid" ||
+                              payment.remarks == "Fully Paid"
                           ? Colors.green
                           : (payment.remarks == "Partial (Interest)" ||
                               payment.remarks == "Partial (Capital)")

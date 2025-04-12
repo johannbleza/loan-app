@@ -86,7 +86,14 @@ class _ClientListTableState extends State<ClientListTable> {
                       ),
                     ),
                     DataCell(
-                      Center(child: TermCompleted(clientId: client.clientId!)),
+                      Center(
+                        child: TermCompleted(
+                          clientId: client.clientId!,
+                          key: ValueKey(
+                            'term_${client.clientId}_${DateTime.now().millisecondsSinceEpoch}',
+                          ),
+                        ),
+                      ),
                     ),
                     DataCell(
                       Text("${client.interestRate.toStringAsFixed(2)}%"),

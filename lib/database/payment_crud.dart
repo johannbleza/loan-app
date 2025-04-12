@@ -176,4 +176,26 @@ class PaymentCrud {
       return Payment.fromMap(maps[index]);
     });
   }
+
+  // Set payment remarks to 'Completed' by client ID where payment is 'Due' or "Overdue"
+  Future<void> setPaymentRemarksToCompleted(int clientId) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {'remarks': 'Completed'},
+      where: 'clientId = ? AND remarks IN ("Due", "Overdue")',
+      whereArgs: [clientId],
+    );
+  }
+
+  // Set payment remarks to 'Due' by client ID where payment is 'Completed'
+  Future<void> setPaymentRemarksToDue(int clientId) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {'remarks': 'Due'},
+      where: 'clientId = ? AND remarks = "Completed"',
+      whereArgs: [clientId],
+    );
+  }
 }

@@ -17,6 +17,15 @@ class ClientStatsRow extends StatefulWidget {
 }
 
 class _ClientStatsRowState extends State<ClientStatsRow> {
+  bool isFullyPaid() {
+    for (var payment in widget.paymentsData) {
+      if (payment.remarks == "Fully Paid") {
+        return true;
+      }
+    }
+    return false;
+  }
+
   double getTotalPayments() {
     double total = 0;
     for (var payment in widget.paymentsData) {
@@ -91,6 +100,41 @@ class _ClientStatsRowState extends State<ClientStatsRow> {
     return total;
   }
 
+  double calculateTotalInterest() {
+    return widget.paymentsData.fold<double>(
+      0.0,
+      (sum, payment) => sum + (payment.interestRate ?? 0.0),
+    );
+  }
+
+  double calculateTotalAgentShare() {
+    return widget.paymentsData.fold<double>(
+      0.0,
+      (sum, payment) => sum + (payment.agentShare),
+    );
+  }
+
+  double calculateTotalMonthlyPayment() {
+    return widget.paymentsData.fold<double>(
+      0.0,
+      (sum, payment) => sum + (payment.monthlyPayment),
+    );
+  }
+
+  double calculateTotalCapitalPayment() {
+    return widget.paymentsData.fold<double>(
+      0.0,
+      (sum, payment) => sum + (payment.capitalPayment),
+    );
+  }
+
+  double calculateTotalInterestPaid() {
+    return widget.paymentsData.fold<double>(
+      0.0,
+      (sum, payment) => sum + (payment.interestPaid),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -100,9 +144,9 @@ class _ClientStatsRowState extends State<ClientStatsRow> {
             padding: const EdgeInsets.all(40),
             child: Column(
               children: [
-                Text("Total Payments Collected:"),
+                Text("Total Balance Capital + Interest:"),
                 Text(
-                  "₱${getTotalPayments().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                  "₱${calculateTotalMonthlyPayment().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -115,9 +159,9 @@ class _ClientStatsRowState extends State<ClientStatsRow> {
             padding: const EdgeInsets.all(40),
             child: Column(
               children: [
-                Text("Total Interest Paid Collected:"),
+                Text("Total Capital:"),
                 Text(
-                  "₱${getTotalInterestPaid().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                  "₱${calculateTotalCapitalPayment().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -130,9 +174,9 @@ class _ClientStatsRowState extends State<ClientStatsRow> {
             padding: const EdgeInsets.all(40),
             child: Column(
               children: [
-                Text("Total Capital Payment Collected:"),
+                Text("Total Interest:"),
                 Text(
-                  "₱${getTotalCapitalPayment().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                  "₱${calculateTotalInterestPaid().toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -147,7 +191,9 @@ class _ClientStatsRowState extends State<ClientStatsRow> {
               children: [
                 Text("Terms Completed"),
                 Text(
-                  "${getTotalTermsCompleted().toString()}/${widget.paymentsData.length + widget.partialsData.length}",
+                  isFullyPaid()
+                      ? "${widget.paymentsData.length + widget.partialsData.length}/${widget.paymentsData.length + widget.partialsData.length}"
+                      : "${getTotalTermsCompleted().toString()}/${widget.paymentsData.length + widget.partialsData.length}",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
               ],

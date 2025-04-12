@@ -33,9 +33,11 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                 paymentDate.year == selectedYear;
           }).toList()
           ..sort((a, b) {
-            var dateA = Jiffy.parse(a.paymentSchedule, pattern: 'MMM d, yyyy');
-            var dateB = Jiffy.parse(b.paymentSchedule, pattern: 'MMM d, yyyy');
-            return dateA.date.compareTo(dateB.date);
+            var dateA =
+                Jiffy.parse(a.paymentSchedule, pattern: 'MMM d, yyyy').dateTime;
+            var dateB =
+                Jiffy.parse(b.paymentSchedule, pattern: 'MMM d, yyyy').dateTime;
+            return dateA.compareTo(dateB);
           });
 
     // Filter payments by agentId
@@ -45,6 +47,16 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
               .where((payment) => payment.agentId == selectedAgentId)
               .toList();
     }
+
+    // Filter payments that are not remarks = "completed"
+    payments =
+        payments
+            .where(
+              (payment) =>
+                  payment.remarks != "Completed" &&
+                  payment.remarks != "Fully Paid",
+            )
+            .toList();
 
     setState(() {
       paymentsData = payments;

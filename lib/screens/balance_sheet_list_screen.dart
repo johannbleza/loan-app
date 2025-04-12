@@ -17,11 +17,11 @@ class _BalanceSheetListScreenState extends State<BalanceSheetListScreen> {
   getBalanceSheet() async {
     var balanceSheet = await balanceSheetCrud.getAllBalanceSheets();
 
-    // Sort the balance sheet data by date in ascending order using Jiffy
+    // Sort by ascending order of date
     balanceSheet.sort((a, b) {
-      var dateA = Jiffy.parse(a.date, pattern: 'MMM d, yyyy');
-      var dateB = Jiffy.parse(b.date, pattern: 'MMM d, yyyy');
-      return dateA.date.compareTo(dateB.date);
+      DateTime dateA = Jiffy.parse(a.date, pattern: 'MMM d, yyyy').dateTime;
+      DateTime dateB = Jiffy.parse(b.date, pattern: 'MMM d, yyyy').dateTime;
+      return dateA.compareTo(dateB);
     });
 
     setState(() {
@@ -62,6 +62,7 @@ class _BalanceSheetListScreenState extends State<BalanceSheetListScreen> {
                     getBalanceSheet();
                   },
                 ),
+                SizedBox(height: 40),
               ],
             ),
           ),
