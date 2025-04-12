@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:loan_app/database/agent_crud.dart';
 // import 'package:loan_app/database/agent_crud.dart';
 import 'package:loan_app/database/database.dart';
-import 'package:loan_app/models/agent.dart';
 import 'package:loan_app/screens/agent_list_screen.dart';
 import 'package:loan_app/screens/balance_sheet_list_screen.dart';
 import 'package:loan_app/screens/client_list_screen.dart';
@@ -33,13 +32,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Loan Management System',
       home: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            await agentCrud.createAgent(Agent(agentName: 'Bleza'));
-          },
-        ),
         body: Row(
           children: [
             NavigationRail(
