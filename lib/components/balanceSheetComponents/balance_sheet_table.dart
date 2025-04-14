@@ -1,7 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:loan_app/components/balanceSheetComponents/entry_add_dialog.dart';
 import 'package:loan_app/components/balanceSheetComponents/entry_delete_dialog.dart';
 import 'package:loan_app/components/balanceSheetComponents/entry_update_dialog.dart';
+import 'package:loan_app/components/balanceSheetComponents/remarks_link_button.dart';
+import 'package:loan_app/components/utilComponents/money_text.dart';
 import 'package:loan_app/models/balanceSheet.dart';
 
 class BalanceSheetTable extends StatefulWidget {
@@ -57,26 +60,26 @@ class _BalanceSheetTableState extends State<BalanceSheetTable> {
                 Text((widget.balanceSheetData.indexOf(sheet) + 1).toString()),
               ),
               DataCell(Text(sheet.date.toString())),
+              DataCell(MoneyText(amount: sheet.inAmount)),
+              DataCell(MoneyText(amount: sheet.outAmount)),
+              DataCell(MoneyText(amount: sheet.balance)),
               DataCell(
-                Text(
-                  sheet.inAmount == 0
-                      ? ''
-                      : '₱ ${sheet.inAmount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
+                sheet.clientId != null
+                    ? RemarksLinkButton(
+                      remarks: sheet.remarks!,
+                      clientId: sheet.clientId!,
+                      whenComplete: () {
+                        widget.refreshBalanceSheetTable();
+                      },
+                    )
+                    : TextButton(
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStatePropertyAll(Colors.black),
+                      ),
+                      onPressed: () {},
+                      child: Text(sheet.remarks!),
+                    ),
               ),
-              DataCell(
-                Text(
-                  sheet.outAmount == 0
-                      ? ''
-                      : '₱ ${sheet.outAmount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
-              DataCell(
-                Text(
-                  '₱ ${sheet.balance.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
-              DataCell(Text(sheet.remarks.toString())),
               DataCell(
                 Center(
                   child: Row(

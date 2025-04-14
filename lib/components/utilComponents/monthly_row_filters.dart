@@ -42,6 +42,7 @@ class _MonthlyRowFiltersState extends State<MonthlyRowFilters> {
         ),
         SizedBox(width: 20),
         SelectAgentButton(
+          showAllAgents: true,
           onAgentSelected: (value) {
             setState(() {
               selectedAgent = value;

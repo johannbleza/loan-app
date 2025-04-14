@@ -10,6 +10,21 @@ class ClientCrud {
     await db.insert('client', client.toMap());
   }
 
+  // Get Client by clientId
+  Future<Client?> getClientByClientId(int clientId) async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'client',
+      where: 'clientId = ?',
+      whereArgs: [clientId],
+    );
+
+    if (maps.isNotEmpty) {
+      return Client.fromMap(maps[0]);
+    }
+    return null;
+  }
+
   // Get All Clients
   Future<List<Client>> getAllClients() async {
     final db = await _databaseHelper.database;

@@ -52,7 +52,7 @@ class _BalanceSheetListScreenState extends State<BalanceSheetListScreen> {
                 ),
                 SizedBox(height: 20),
                 Text(
-                  'Entries (${balanceSheetData.length})',
+                  'Entries List (${balanceSheetData.length})',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
                 ),
                 SizedBox(height: 20),

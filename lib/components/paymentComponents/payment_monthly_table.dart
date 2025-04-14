@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:loan_app/components/paymentComponents/payment_update_dialog.dart';
+import 'package:loan_app/components/clientsComponents/client_page_button.dart';
+import 'package:loan_app/components/paymentComponents/payment_update_button.dart';
+import 'package:loan_app/components/utilComponents/money_text.dart';
 import 'package:loan_app/components/utilComponents/term_completed.dart';
 import 'package:loan_app/models/payment.dart';
-import 'package:loan_app/pages/client_page.dart';
 import 'package:loan_app/utils/globals.dart';
 
 class PaymentMonthlyTable extends StatefulWidget {
@@ -45,21 +46,9 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
                 Text((widget.paymentData.indexOf(payment) + 1).toString()),
               ),
               DataCell(
-                TextButton(
-                  onPressed: () async {
-                    final client = await clientCrud.getClientById(
-                      payment.clientId,
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ClientPage(client: client),
-                      ),
-                    ).whenComplete(() {
-                      widget.refreshMonthlyPaymentTable();
-                    });
-                  },
-                  child: Text(payment.clientName!),
+                ClientPageButton(
+                  payment: payment,
+                  whenComplete: widget.refreshMonthlyPaymentTable,
                 ),
               ),
               DataCell(Text(payment.paymentSchedule)),
@@ -73,86 +62,20 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
                   ),
                 ),
               ),
-              DataCell(
-                Text(
-                  '₱${payment.loanAmount?.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
-              DataCell(
-                Text(
-                  '₱${payment.monthlyPayment.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                  style: TextStyle(
-                    color:
-                        payment.remarks == "Fully Paid"
-                            ? Colors.green
-                            : Colors.black,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  style: TextStyle(
-                    color:
-                        payment.remarks == "Partial (Interest)" ||
-                                payment.remarks == "Paid"
-                            ? Colors.green
-                            : Colors.black,
-                  ),
-
-                  '₱${payment.interestPaid.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
-              DataCell(
-                Text(
-                  style: TextStyle(
-                    color:
-                        payment.remarks == "Partial (Capital)" ||
-                                payment.remarks == "Paid"
-                            ? Colors.green
-                            : Colors.black,
-                  ),
-                  '₱${payment.capitalPayment.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
+              DataCell(MoneyText(amount: payment.loanAmount!)),
+              DataCell(MoneyText(amount: payment.monthlyPayment)),
+              DataCell(MoneyText(amount: payment.interestPaid)),
+              DataCell(MoneyText(amount: payment.capitalPayment)),
               DataCell(Text(payment.agentName!)),
+              DataCell(MoneyText(amount: payment.agentShare)),
               DataCell(
-                Text(
-                  '₱${payment.agentShare.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
+                MoneyText(amount: payment.monthlyPayment - payment.agentShare),
               ),
               DataCell(
-                Text(
-                  '₱${(payment.interestPaid - payment.agentShare).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                ),
-              ),
-              DataCell(
-                TextButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                      payment.remarks == "Paid" ||
-                              payment.remarks == "Fully Paid"
-                          ? Colors.green
-                          : (payment.remarks == "Partial (Interest)" ||
-                              payment.remarks == "Partial (Capital)")
-                          ? Colors.lightGreen
-                          : payment.remarks == "Overdue"
-                          ? Colors.red
-                          : Colors.orange,
-                    ),
-                    foregroundColor: WidgetStatePropertyAll(Colors.white),
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder:
-                          (context) => PaymentUpdateDialog(
-                            payment: payment,
-                            onPaymentStatusUpdated:
-                                widget.refreshMonthlyPaymentTable,
-                          ),
-                    );
-                  },
-                  child: Text(payment.remarks!),
+                PaymentUpdateButton(
+                  payment: payment,
+                  paymentsData: widget.paymentData,
+                  onPaymentStatusUpdated: widget.refreshMonthlyPaymentTable,
                 ),
               ),
             ],
@@ -166,40 +89,50 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
             DataCell(Text("")),
             DataCell(Text("Total:", style: TextStyle(color: Colors.white))),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + (payment.loanAmount ?? 0)).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount: calculateTotals.getTotalAmountTaken(widget.paymentData),
+                color: Colors.white,
               ),
             ),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + payment.monthlyPayment).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount: calculateTotals.getTotalMonthlyPayments(
+                  widget.paymentData,
+                ),
+                color: Colors.white,
               ),
             ),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + payment.interestPaid).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount: calculateTotals.getTotalInterestPaid(
+                  widget.paymentData,
+                ),
+                color: Colors.white,
               ),
             ),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + payment.capitalPayment).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount: calculateTotals.getTotalCapitalPayments(
+                  widget.paymentData,
+                ),
+                color: Colors.white,
               ),
             ),
-            DataCell(Text("", style: TextStyle(color: Colors.white))),
+            DataCell(Text("")),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + payment.agentShare).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount: calculateTotals.getTotalAgentShare(widget.paymentData),
+                color: Colors.white,
               ),
             ),
             DataCell(
-              Text(
-                '₱${widget.paymentData.fold(0.0, (sum, payment) => sum + (payment.interestPaid - payment.agentShare)).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                style: TextStyle(color: Colors.white),
+              MoneyText(
+                amount:
+                    calculateTotals.getTotalMonthlyPayments(
+                      widget.paymentData,
+                    ) -
+                    calculateTotals.getTotalAgentShare(widget.paymentData),
+                color: Colors.white,
               ),
             ),
             DataCell(Text("")),

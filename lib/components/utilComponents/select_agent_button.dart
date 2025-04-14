@@ -3,12 +3,14 @@ import 'package:loan_app/models/agent.dart';
 import 'package:loan_app/utils/globals.dart';
 
 class SelectAgentButton extends StatefulWidget {
+  final bool? showAllAgents;
   final Agent? currentAgent;
   final ValueChanged<int?> onAgentSelected;
   const SelectAgentButton({
     super.key,
     required this.onAgentSelected,
     this.currentAgent,
+    this.showAllAgents,
   });
 
   @override
@@ -45,15 +47,14 @@ class _SelectAgentButtonState extends State<SelectAgentButton> {
           widget.onAgentSelected(value);
         });
       },
-      dropdownMenuEntries:
-          _agents
-              .map(
-                (agent) => DropdownMenuEntry(
-                  label: agent.agentName,
-                  value: agent.agentId,
-                ),
-              )
-              .toList(),
+      dropdownMenuEntries: [
+        if (widget.showAllAgents == true)
+          DropdownMenuEntry(label: "All Agents", value: null),
+        ..._agents.map(
+          (agent) =>
+              DropdownMenuEntry(label: agent.agentName, value: agent.agentId),
+        ),
+      ],
     );
   }
 }

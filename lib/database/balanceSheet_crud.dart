@@ -33,7 +33,19 @@ class BalanceSheetCrud {
   // Get All Balance Sheets
   Future<List<BalanceSheet>> getAllBalanceSheets() async {
     final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('balanceSheet');
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT 
+        b.balanceSheetId, 
+        b.date, 
+        b.inAmount, 
+        b.outAmount, 
+        b.balance, 
+        b.remarks,
+        COALESCE(b.clientId, p.clientId) as clientId
+      FROM balanceSheet AS b 
+      LEFT OUTER JOIN payment AS p
+        ON b.paymentId = p.paymentId
+    ''');
 
     return List.generate(maps.length, (index) {
       return BalanceSheet.fromMap(maps[index]);

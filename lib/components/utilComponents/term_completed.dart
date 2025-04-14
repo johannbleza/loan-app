@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loan_app/models/partial.dart';
 import 'package:loan_app/models/payment.dart';
 import 'package:loan_app/utils/globals.dart';
 
@@ -13,7 +12,6 @@ class TermCompleted extends StatefulWidget {
 
 class _TermCompletedState extends State<TermCompleted> {
   List<Payment> paymentsData = [];
-  List<Partial> partialsData = [];
   bool isFullyPaid() {
     for (var payment in paymentsData) {
       if (payment.remarks == "Fully Paid") {
@@ -25,11 +23,9 @@ class _TermCompletedState extends State<TermCompleted> {
 
   getPayments() async {
     var payments = await paymentCrud.getAllPaymentsByClientId(widget.clientId);
-    var partials = await partialCrud.getAllPartialsByClientId(widget.clientId);
 
     setState(() {
       paymentsData = payments;
-      partialsData = partials;
     });
   }
 
@@ -43,11 +39,6 @@ class _TermCompletedState extends State<TermCompleted> {
       }
     }
 
-    for (var partial in partialsData) {
-      if (partial.remarks == "Paid") {
-        total++;
-      }
-    }
     return total;
   }
 
@@ -62,8 +53,8 @@ class _TermCompletedState extends State<TermCompleted> {
   Widget build(BuildContext context) {
     return Text(
       isFullyPaid()
-          ? "${paymentsData.length + partialsData.length}/${paymentsData.length + partialsData.length}"
-          : "${getTotalTermsCompleted().toString()}/${paymentsData.length + partialsData.length}",
+          ? "${paymentsData.length}/${paymentsData.length}"
+          : "${getTotalTermsCompleted().toString()}/${paymentsData.length}",
     );
   }
 }

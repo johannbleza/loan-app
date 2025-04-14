@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:loan_app/components/utilComponents/select_date_button.dart';
 import 'package:loan_app/models/balanceSheet.dart';
-import 'package:loan_app/models/partial.dart';
 import 'package:loan_app/models/payment.dart';
 import 'package:loan_app/utils/globals.dart';
 
 class PaymentUpdateDialog extends StatefulWidget {
+  final List<Payment>? paymentsData;
   final VoidCallback onPaymentStatusUpdated;
-  final double? remainingInterestPaid;
-  final double? remainingCapitalPayment;
   final Payment payment;
+  final bool? showFullyPaidOption;
   const PaymentUpdateDialog({
     super.key,
     required this.payment,
     required this.onPaymentStatusUpdated,
-    this.remainingInterestPaid,
-    this.remainingCapitalPayment,
+    this.paymentsData,
+    this.showFullyPaidOption,
   });
 
   @override
@@ -65,25 +64,55 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               controller: _remarksController,
               initialSelection: widget.payment.remarks,
               width: 250,
-              dropdownMenuEntries: [
-                DropdownMenuEntry(label: "Due", value: 'Due'),
-                DropdownMenuEntry(
-                  label: "Partial (Interest)",
-                  value: 'Partial (Interest)',
-                ),
-                DropdownMenuEntry(
-                  label: "Partial (Capital)",
-                  value: 'Partial (Capital)',
-                ),
-                DropdownMenuEntry(label: "Paid", value: 'Paid'),
-                DropdownMenuEntry(label: "Fully Paid", value: 'Fully Paid'),
-              ],
+              dropdownMenuEntries:
+                  widget.payment.interestPaid == 0
+                      ? [
+                        DropdownMenuEntry(label: "Due", value: 'Due'),
+                        DropdownMenuEntry(label: "Paid", value: 'Paid'),
+                        if (widget.showFullyPaidOption == true)
+                          DropdownMenuEntry(
+                            label: "Fully Paid",
+                            value: 'Fully Paid',
+                          ),
+                      ]
+                      : widget.payment.capitalPayment == 0
+                      ? [
+                        DropdownMenuEntry(label: "Due", value: 'Due'),
+                        DropdownMenuEntry(label: "Paid", value: 'Paid'),
+                        if (widget.showFullyPaidOption == true)
+                          DropdownMenuEntry(
+                            label: "Fully Paid",
+                            value: 'Fully Paid',
+                          ),
+                      ]
+                      : [
+                        DropdownMenuEntry(label: "Due", value: 'Due'),
+                        DropdownMenuEntry(
+                          label: "Partial (Interest)",
+                          value: 'Partial (Interest)',
+                        ),
+                        DropdownMenuEntry(
+                          label: "Partial (Capital)",
+                          value: 'Partial (Capital)',
+                        ),
+                        DropdownMenuEntry(label: "Paid", value: 'Paid'),
+                        if (widget.showFullyPaidOption == true)
+                          DropdownMenuEntry(
+                            label: "Fully Paid",
+                            value: 'Fully Paid',
+                          ),
+                      ],
               onSelected: (value) {
                 setState(() {
                   _remarksController.text = value!;
                 });
               },
             ),
+            SizedBox(height: 16),
+            // ResetPaymentScheduleButton(
+            //   client: client,
+            //   onReset: widget.onPaymentStatusUpdated,
+            // ),
           ],
         ),
       ),
@@ -95,9 +124,11 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
           child: Text("Cancel"),
         ),
         TextButton(
-          onPressed: () {
+          onPressed: () async {
+            // Check if payment date is empty and remarks is not 'Due' or 'Overdue'
             if (_paymentDateController.text.isEmpty &&
-                _remarksController.text != 'Due') {
+                (_remarksController.text != 'Due' ||
+                    _remarksController.text != 'Overdue')) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("Please select a payment date."),
@@ -120,6 +151,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               _modeOfPaymentController.clear();
             }
 
+            // Update Payment - paymentDate, modeOfPayment, remarks,
             paymentCrud.updatePaymentRemarks(
               widget.payment.paymentId!,
               _paymentDateController.text,
@@ -127,38 +159,12 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               _remarksController.text,
             );
 
-            partialCrud.deletePartial(widget.payment.paymentId!);
-
-            // If remarks is partial create a partial payment
-            if (_remarksController.text == 'Partial (Capital)') {
-              partialCrud.createPartial(
-                Partial(
-                  interestPaid: widget.payment.interestPaid,
-                  capitalPayment: 0,
-                  agentShare: widget.payment.agentShare,
-                  paymentId: widget.payment.paymentId!,
-                  remarks: 'Unpaid',
-                ),
-              );
-            } else if (_remarksController.text == 'Partial (Interest)') {
-              partialCrud.createPartial(
-                Partial(
-                  interestPaid: 0,
-                  capitalPayment: widget.payment.capitalPayment,
-                  agentShare: widget.payment.agentShare,
-                  paymentId: widget.payment.paymentId!,
-                  remarks: 'Unpaid',
-                ),
-              );
-            }
-
-            // Delete Balance Sheet First
+            // Delete Balance Sheet First to Avoid duplicates
             balanceSheetCrud.deleteBalanceSheetByPaymentId(
               widget.payment.paymentId!,
             );
 
-            // Import to Balance Sheet
-
+            // Import to Balance Sheet & Add offest payments
             if (_remarksController.text == 'Paid') {
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
@@ -172,6 +178,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                 ),
               );
             } else if (_remarksController.text == 'Partial (Interest)') {
+              // Create Balance Sheet
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
                   date: _paymentDateController.text,
@@ -179,10 +186,65 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.interestPaid,
                   remarks:
-                      '${widget.payment.clientName} - Partial Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Partial (Interest) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
+
+              // Update Monthly Payment to be Interest Paid
+              paymentCrud.updateMonthlyCapitalPaymentAgentShare(
+                widget.payment.paymentId!,
+                widget.payment.interestPaid,
+                0,
+                widget.payment.interestPaid *
+                    (widget.payment.agentInterest! / 100),
+              );
+
+              // Create New Payment to Offset
+              paymentCrud.createPayment(
+                Payment(
+                  paymentSchedule:
+                      Jiffy.parse(
+                            widget.payment.paymentSchedule,
+                            pattern: 'MMM d, yyyy',
+                          )
+                          .add(
+                            months:
+                                widget.paymentsData!.length -
+                                widget.paymentsData!.indexOf(widget.payment),
+                          )
+                          .format(pattern: 'MMM d, yyyy')
+                          .toString(),
+                  principalBalance: widget.payment.principalBalance,
+                  monthlyPayment: widget.payment.capitalPayment,
+                  interestPaid: 0,
+                  capitalPayment: widget.payment.capitalPayment,
+                  agentShare:
+                      widget.payment.capitalPayment *
+                      (widget.payment.agentInterest! / 100),
+                  clientId: widget.payment.clientId,
+                  remarks: 'Due',
+                ),
+              );
+
+              // Adjust Principal Balance
+              for (Payment payment in widget.paymentsData!.sublist(
+                widget.paymentsData!.indexOf(widget.payment),
+              )) {
+                await paymentCrud.updatePrincipalBalanceByPaymentId(
+                  payment.paymentId! + 1,
+                  payment.principalBalance,
+                );
+              }
+              // // Adjust Balance
+              // for (Payment payment in widget.paymentsData!.sublist(
+              //   widget.paymentsData!.indexOf(widget.payment),
+              // )) {
+              //   await paymentCrud.updatePrincipalBalanceByPaymentId(
+              //     payment.paymentId! + 1,
+              //     payment.principalBalance,
+              //   );
+              // }
             } else if (_remarksController.text == 'Partial (Capital)') {
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
@@ -191,43 +253,98 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.capitalPayment,
                   remarks:
-                      '${widget.payment.clientName} - Partial Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Partial (Capital) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
                   paymentId: widget.payment.paymentId,
+                ),
+              );
+
+              // Update Monthly Payment
+              paymentCrud.updateMonthlyInterestPaymentAgentShare(
+                widget.payment.paymentId!,
+                widget.payment.capitalPayment,
+                0,
+                widget.payment.capitalPayment *
+                    (widget.payment.agentInterest! / 100),
+              );
+
+              // Create New Payment
+              paymentCrud.createPayment(
+                Payment(
+                  paymentSchedule:
+                      Jiffy.parse(
+                            widget.payment.paymentSchedule,
+                            pattern: 'MMM d, yyyy',
+                          )
+                          .add(
+                            months:
+                                widget.paymentsData!.length -
+                                widget.paymentsData!.indexOf(widget.payment),
+                          )
+                          .format(pattern: 'MMM d, yyyy')
+                          .toString(),
+                  principalBalance: 0,
+                  monthlyPayment: widget.payment.interestPaid,
+                  interestPaid: widget.payment.interestPaid,
+                  capitalPayment: 0,
+                  agentShare:
+                      widget.payment.interestPaid *
+                      (widget.payment.agentInterest! / 100),
+                  clientId: widget.payment.clientId,
+                  remarks: 'Due',
                 ),
               );
             }
 
-            // If Fully Paid
+            // Fully Paid
             if (_remarksController.text == 'Fully Paid') {
-              paymentCrud.setPaymentRemarksToCompleted(widget.payment.clientId);
+              // Totals
+              double interestPaidTotal = calculateTotals
+                  .getRemainingInterestPaid(widget.paymentsData!);
+              double capitalPaymentTotal = calculateTotals
+                  .getRemainingCapitalPayments(widget.paymentsData!);
+              double monthlyPaymentTotal =
+                  interestPaidTotal + capitalPaymentTotal;
+              await paymentCrud.updatePayment(
+                Payment(
+                  paymentId: widget.payment.paymentId,
+                  paymentSchedule: widget.payment.paymentSchedule,
+                  principalBalance: widget.payment.principalBalance,
+                  monthlyPayment: monthlyPaymentTotal,
+                  interestPaid: interestPaidTotal,
+                  capitalPayment: capitalPaymentTotal,
+                  agentShare:
+                      monthlyPaymentTotal *
+                      (widget.payment.agentInterest! / 100),
+                  clientId: widget.payment.clientId,
+                  paymentDate: _paymentDateController.text,
+                  modeOfPayment: _modeOfPaymentController.text,
+                  remarks: _remarksController.text,
+                ),
+              );
+
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
                   date: _paymentDateController.text,
-                  inAmount:
-                      widget.remainingCapitalPayment! +
-                      widget.remainingInterestPaid!,
+                  inAmount: monthlyPaymentTotal,
                   outAmount: 0,
-                  balance:
-                      widget.remainingCapitalPayment! +
-                      widget.remainingInterestPaid!,
-                  remarks:
-                      '${widget.payment.clientName} - Fully Paid for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                  balance: monthlyPaymentTotal,
+                  remarks: '${widget.payment.clientName} - Fully Paid',
                   paymentId: widget.payment.paymentId,
                 ),
               );
-            }
 
-            if (_remarksController.text != 'Fully Paid') {
-              paymentCrud.setPaymentRemarksToDue(widget.payment.clientId);
+              await paymentCrud.setPaymentRemarksToCompleted(
+                widget.payment.clientId,
+              );
             }
-
-            // Show a success message
+            // Show snackbar
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text("Payment status updated successfully!"),
+                content: Text("Payment status updated successfully."),
                 duration: Duration(seconds: 2),
               ),
             );
+
             widget.onPaymentStatusUpdated();
             Navigator.pop(context);
           },

@@ -13,6 +13,17 @@ class PaymentCrud {
     await db.insert('payment', payment.toMap());
   }
 
+  // Update Payment
+  Future<void> updatePayment(Payment payment) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      payment.toMap(),
+      where: 'paymentId = ?',
+      whereArgs: [payment.paymentId],
+    );
+  }
+
   // Generate Payments for Client
   Future<void> generatePayments(Client client) async {
     final db = await _databaseHelper.database;
@@ -55,7 +66,8 @@ class PaymentCrud {
         interestPaid: interestPaid,
         capitalPayment: capitalPayment,
         clientId: client.clientId!,
-        agentShare: interestPaid * (client.agentInterest / 100),
+        agentShare:
+            (interestPaid + capitalPayment) * (client.agentInterest / 100),
         remarks: 'Due',
       );
 
@@ -70,7 +82,7 @@ class PaymentCrud {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
-      Select p.*, c.interestRate, c.clientName
+      Select p.*, c.interestRate, c.clientName, c.agentInterest
       FROM PAYMENT AS p INNER JOIN CLIENT AS c
         ON p.clientId = c.clientId
       WHERE p.clientId = ?
@@ -98,6 +110,74 @@ class PaymentCrud {
         'modeOfPayment': modeOfPayment,
         'remarks': remarks,
       },
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Monthly Payment and Capital Payment by paymentId
+  Future<void> updateMonthlyCapitalPaymentAgentShare(
+    int paymentId,
+    double monthlyPayment,
+    double capitalPayment,
+    double agentShare,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {
+        'monthlyPayment': monthlyPayment,
+        'capitalPayment': capitalPayment,
+        'agentShare': agentShare,
+      },
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Monthly Payment, Interest Paid and Agent Share by paymentId
+  Future<void> updateMonthlyInterestPaymentAgentShare(
+    int paymentId,
+    double monthlyPayment,
+    double interestPaid,
+    double agentShare,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {
+        'monthlyPayment': monthlyPayment,
+        'interestPaid': interestPaid,
+        'agentShare': agentShare,
+      },
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Principal Balance by paymentId if remarks is due or overdue
+  Future<void> updatePrincipalBalance(
+    int paymentId,
+    double principalBalance,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {'principalBalance': principalBalance},
+      where: 'paymentId = ? AND remarks IN ("Due", "Overdue")',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Principal Balance by paymentId
+  Future<void> updatePrincipalBalanceByPaymentId(
+    int paymentId,
+    double principalBalance,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {'principalBalance': principalBalance},
       where: 'paymentId = ?',
       whereArgs: [paymentId],
     );
@@ -133,7 +213,7 @@ class PaymentCrud {
   Future<List<Payment>> getMonthlyPayments() async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm
+      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm, c.agentInterest
       from payment as p inner join client as c
 	      on p.clientId = c.clientId
 		      inner join agent as a
@@ -164,7 +244,7 @@ class PaymentCrud {
   Future<List<Payment>> getOverduePayments() async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm
+      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm, c.agentInterest
       from payment as p inner join client as c
 	      on p.clientId = c.clientId
 		      inner join agent as a
@@ -177,25 +257,41 @@ class PaymentCrud {
     });
   }
 
-  // Set payment remarks to 'Completed' by client ID where payment is 'Due' or "Overdue"
+  // Set payment remarks to 'Completed', principalBalance to 0, monthlyPayment to 0, interestPaid to 0, capitalPayment to 0, agentShare to 0 where payment is 'Due' or "Overdue" by client ID
   Future<void> setPaymentRemarksToCompleted(int clientId) async {
     final db = await _databaseHelper.database;
     await db.update(
       'payment',
-      {'remarks': 'Completed'},
+      {
+        'remarks': 'Completed',
+        'principalBalance': 0,
+        'monthlyPayment': 0,
+        'interestPaid': 0,
+        'capitalPayment': 0,
+        'agentShare': 0,
+      },
       where: 'clientId = ? AND remarks IN ("Due", "Overdue")',
       whereArgs: [clientId],
     );
   }
 
-  // Set payment remarks to 'Due' by client ID where payment is 'Completed'
-  Future<void> setPaymentRemarksToDue(int clientId) async {
+  // Update Payment Date by paymentId and if their Remarks are Due
+  Future<void> updatePaymentDateByClientId(
+    int paymentId,
+    String paymentSchedule,
+  ) async {
     final db = await _databaseHelper.database;
     await db.update(
       'payment',
-      {'remarks': 'Due'},
-      where: 'clientId = ? AND remarks = "Completed"',
-      whereArgs: [clientId],
+      {'paymentSchedule': paymentSchedule},
+      where: 'paymentId = ? AND remarks = "Due"',
+      whereArgs: [paymentId],
     );
+  }
+
+  // Delete Payment by clientId
+  Future<void> deletePaymentByClientId(int clientId) async {
+    final db = await _databaseHelper.database;
+    await db.delete('payment', where: 'clientId = ?', whereArgs: [clientId]);
   }
 }

@@ -50,13 +50,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
 
     // Filter payments that are not remarks = "completed"
     payments =
-        payments
-            .where(
-              (payment) =>
-                  payment.remarks != "Completed" &&
-                  payment.remarks != "Fully Paid",
-            )
-            .toList();
+        payments.where((payment) => payment.remarks != "Completed").toList();
 
     setState(() {
       paymentsData = payments;
@@ -110,7 +104,10 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                   SizedBox(height: 20),
                   paymentsData.isEmpty
                       ? SizedBox()
-                      : MonthlyStatsRow(paymentsData: paymentsData),
+                      : MonthlyStatsRow(
+                        paymentsData: paymentsData,
+                        agentShare: selectedAgentId != null,
+                      ),
                   SizedBox(height: 20),
                   Text(
                     "Collection List"
@@ -120,8 +117,8 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                   SizedBox(height: 20),
                   PaymentMonthlyTable(
                     paymentData: paymentsData,
-                    refreshMonthlyPaymentTable: () {
-                      getPayments();
+                    refreshMonthlyPaymentTable: () async {
+                      await getPayments();
                     },
                   ),
                 ],
