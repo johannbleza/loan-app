@@ -69,7 +69,7 @@ class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
               DataCell(
                 MoneyText(
                   amount: payment.principalBalance,
-                  color: _getCellColor(paymentIndex, payment.isFlexible!!),
+                  color: _getCellColor(paymentIndex, payment.isFlexible!),
                 ),
               ),
               DataCell(
