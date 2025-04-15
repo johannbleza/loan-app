@@ -74,6 +74,7 @@ class _PaymentUpdateButtonState extends State<PaymentUpdateButton> {
           context: context,
           builder:
               (context) => PaymentUpdateDialog(
+                isFlexible: widget.payment.isFlexible,
                 showFullyPaidOption: widget.showFullyPaidOption,
                 payment: widget.payment,
                 onPaymentStatusUpdated: () {

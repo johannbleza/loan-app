@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:loan_app/components/utilComponents/select_date_button.dart';
 import 'package:loan_app/models/balanceSheet.dart';
@@ -6,6 +7,7 @@ import 'package:loan_app/models/payment.dart';
 import 'package:loan_app/utils/globals.dart';
 
 class PaymentUpdateDialog extends StatefulWidget {
+  final int? isFlexible;
   final List<Payment>? paymentsData;
   final VoidCallback onPaymentStatusUpdated;
   final Payment payment;
@@ -16,6 +18,7 @@ class PaymentUpdateDialog extends StatefulWidget {
     required this.onPaymentStatusUpdated,
     this.paymentsData,
     this.showFullyPaidOption,
+    this.isFlexible,
   });
 
   @override
@@ -28,6 +31,11 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
       TextEditingController();
   final TextEditingController _paymentDateController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
+
+  // Flexible payment text controllers
+  final TextEditingController _interestPaidController = TextEditingController();
+  final TextEditingController _capitalPaymentController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -46,6 +54,25 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.isFlexible == 1) ...[
+              TextField(
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                controller: _interestPaidController,
+                decoration: const InputDecoration(labelText: 'Interest Paid'),
+              ),
+              TextField(
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                controller: _capitalPaymentController,
+                decoration: const InputDecoration(labelText: 'Capital Payment'),
+              ),
+              SizedBox(height: 16),
+            ],
             TextField(
               controller: _modeOfPaymentController,
               decoration: InputDecoration(labelText: "Mode of Payment"),
@@ -65,7 +92,12 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               initialSelection: widget.payment.remarks,
               width: 250,
               dropdownMenuEntries:
-                  widget.payment.interestPaid == 0
+                  widget.isFlexible == 1
+                      ? [
+                        DropdownMenuEntry(label: "Due", value: 'Due'),
+                        DropdownMenuEntry(label: "Paid", value: 'Paid'),
+                      ]
+                      : widget.payment.interestPaid == 0
                       ? [
                         DropdownMenuEntry(label: "Due", value: 'Due'),
                         DropdownMenuEntry(label: "Paid", value: 'Paid'),
@@ -164,8 +196,70 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
               widget.payment.paymentId!,
             );
 
+            if (widget.isFlexible == 1) {
+              // If empty set to 0
+              _interestPaidController.text == ""
+                  ? _interestPaidController.text = "0"
+                  : _interestPaidController.text;
+              _capitalPaymentController.text == ""
+                  ? _capitalPaymentController.text = "0"
+                  : _capitalPaymentController.text;
+
+              // Update Flexible Payment
+              double interestPaid = double.parse(_interestPaidController.text);
+              double capitalPayment = double.parse(
+                _capitalPaymentController.text,
+              );
+              double flexibleMonthlyPayment = interestPaid + capitalPayment;
+
+              paymentCrud.updateFlexiblePayments(
+                widget.payment.paymentId!,
+                flexibleMonthlyPayment,
+                interestPaid,
+                capitalPayment,
+                (flexibleMonthlyPayment) *
+                    (widget.payment.agentInterest! / 100),
+              );
+
+              // Create balance sheet for flexible
+              balanceSheetCrud.createBalanceSheet(
+                BalanceSheet(
+                  date: _paymentDateController.text,
+                  inAmount: flexibleMonthlyPayment,
+                  outAmount: 0,
+                  balance: flexibleMonthlyPayment,
+                  remarks:
+                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                  paymentId: widget.payment.paymentId,
+                ),
+              );
+
+              // Add new payment if principal balance is not 0
+              if (widget.payment.principalBalance - capitalPayment > 0) {
+                String paymentSchdule =
+                    Jiffy.parse(
+                      widget.payment.paymentSchedule,
+                      pattern: 'MMM d, yyyy',
+                    ).add(months: 1).format(pattern: 'MMM d, yyyy').toString();
+
+                paymentCrud.createPayment(
+                  Payment(
+                    paymentSchedule: paymentSchdule,
+                    principalBalance:
+                        widget.payment.principalBalance - capitalPayment,
+                    monthlyPayment: 0,
+                    interestPaid: 0,
+                    capitalPayment: 0,
+                    agentShare: 0,
+                    clientId: widget.payment.clientId,
+                    remarks: 'Due',
+                  ),
+                );
+              }
+            }
+
             // Import to Balance Sheet & Add offest payments
-            if (_remarksController.text == 'Paid') {
+            if (_remarksController.text == 'Paid' && widget.isFlexible == 0) {
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
                   date: _paymentDateController.text,

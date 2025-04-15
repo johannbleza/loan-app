@@ -73,6 +73,19 @@ class _ClientInfoRowState extends State<ClientInfoRow> {
                 ),
               ],
             ),
+            if (widget.client.isFlexible == 1) SizedBox(width: 40),
+            if (widget.client.isFlexible == 1)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Interest:"),
+                  Text(
+                    "₱${(widget.client.loanAmount * (widget.client.interestRate / 100)).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             SizedBox(width: 40),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,6 +109,17 @@ class _ClientInfoRowState extends State<ClientInfoRow> {
               ],
             ),
             SizedBox(width: 40),
+            if (widget.client.isFlexible == 1)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Payment Plan:"),
+                  Text(
+                    "Flexible",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

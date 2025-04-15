@@ -32,6 +32,9 @@ class DatabaseHelper {
       onOpen: (db) async {
         print(path);
         await db.execute('PRAGMA foreign_keys = ON');
+        // await db.execute(
+        //   'ALTER TABLE client ADD COLUMN isFlexible INTEGER DEFAULT 0',
+        // );
       },
     );
   }
@@ -56,6 +59,7 @@ class DatabaseHelper {
         loanDate TEXT NOT NULL,
         agentId INTEGER NOT NULL,
         agentInterest REAL NOT NULL,
+        isFlexible INTEGER DEFAULT 0,
         FOREIGN KEY (agentId) REFERENCES agent(agentId) ON DELETE CASCADE
       )
     ''');

@@ -27,7 +27,11 @@ class _ResetPaymentScheduleButtonState
       ),
       onPressed: () async {
         paymentCrud.deletePaymentByClientId(widget.client.clientId!);
-        await paymentCrud.generatePayments(widget.client);
+        if (widget.client.isFlexible == 1) {
+          await paymentCrud.generateFlexiblePayment(widget.client);
+        } else {
+          await paymentCrud.generatePayments(widget.client);
+        }
         await paymentCrud.updateOverduePayments();
 
         widget.onReset();

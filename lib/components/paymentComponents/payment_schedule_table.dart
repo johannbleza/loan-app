@@ -21,8 +21,14 @@ class PaymentScheduleTable extends StatefulWidget {
 }
 
 class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
+  // Helper method to determine the color
+  Color _getCellColor(int paymentIndex, int isFlexible) {
+    return widget.loanTerm < paymentIndex + 1 && isFlexible != 1
+        ? Colors.red
+        : Colors.black;
+  }
+
   @override
-  // Calculate Totals
   Widget build(BuildContext context) {
     return DataTable(
       columnSpacing: 16,
@@ -40,18 +46,15 @@ class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
         DataColumn(label: Text('Remarks')),
       ],
       rows: [
-        ...widget.paymentsData.map(
-          (payment) => DataRow(
+        ...widget.paymentsData.map((payment) {
+          final paymentIndex = widget.paymentsData.indexOf(payment);
+          return DataRow(
             cells: [
               DataCell(
                 Text(
-                  (widget.paymentsData.indexOf(payment) + 1).toString(),
+                  (paymentIndex + 1).toString(),
                   style: TextStyle(
-                    color:
-                        widget.loanTerm <
-                                widget.paymentsData.indexOf(payment) + 1
-                            ? Colors.red
-                            : Colors.black,
+                    color: _getCellColor(paymentIndex, payment.isFlexible!),
                   ),
                 ),
               ),
@@ -59,80 +62,53 @@ class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
                 Text(
                   payment.paymentSchedule,
                   style: TextStyle(
-                    color:
-                        widget.loanTerm <
-                                widget.paymentsData.indexOf(payment) + 1
-                            ? Colors.red
-                            : Colors.black,
+                    color: _getCellColor(paymentIndex, payment.isFlexible!),
                   ),
                 ),
               ),
               DataCell(
                 MoneyText(
                   amount: payment.principalBalance,
-                  color:
-                      widget.loanTerm < widget.paymentsData.indexOf(payment) + 1
-                          ? Colors.red
-                          : Colors.black,
+                  color: _getCellColor(paymentIndex, payment.isFlexible!!),
                 ),
               ),
               DataCell(
                 Text(
                   '${payment.interestRate!.toStringAsFixed(2)}%',
                   style: TextStyle(
-                    color:
-                        widget.loanTerm <
-                                widget.paymentsData.indexOf(payment) + 1
-                            ? Colors.red
-                            : Colors.black,
+                    color: _getCellColor(paymentIndex, payment.isFlexible!),
                   ),
                 ),
               ),
               DataCell(
                 MoneyText(
                   amount: payment.monthlyPayment,
-                  color:
-                      widget.loanTerm < widget.paymentsData.indexOf(payment) + 1
-                          ? Colors.red
-                          : Colors.black,
+                  color: _getCellColor(paymentIndex, payment.isFlexible!),
                 ),
               ),
               DataCell(
                 MoneyText(
                   amount: payment.interestPaid,
-                  color:
-                      widget.loanTerm < widget.paymentsData.indexOf(payment) + 1
-                          ? Colors.red
-                          : Colors.black,
+                  color: _getCellColor(paymentIndex, payment.isFlexible!),
                 ),
               ),
               DataCell(
                 MoneyText(
                   amount: payment.capitalPayment,
-                  color:
-                      widget.loanTerm < widget.paymentsData.indexOf(payment) + 1
-                          ? Colors.red
-                          : Colors.black,
+                  color: _getCellColor(paymentIndex, payment.isFlexible!),
                 ),
               ),
               DataCell(
                 MoneyText(
                   amount: payment.agentShare,
-                  color:
-                      widget.loanTerm < widget.paymentsData.indexOf(payment) + 1
-                          ? Colors.red
-                          : Colors.black,
+                  color: _getCellColor(paymentIndex, payment.isFlexible!),
                 ),
               ),
               DataCell(
                 Text(
                   payment.paymentDate ?? "",
                   style: TextStyle(
-                    color:
-                        widget.loanTerm <
-                                widget.paymentsData.indexOf(payment) + 1
-                            ? Colors.red
-                            : Colors.black,
+                    color: _getCellColor(paymentIndex, payment.isFlexible!),
                   ),
                 ),
               ),
@@ -140,11 +116,7 @@ class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
                 Text(
                   payment.modeOfPayment ?? "",
                   style: TextStyle(
-                    color:
-                        widget.loanTerm <
-                                widget.paymentsData.indexOf(payment) + 1
-                            ? Colors.red
-                            : Colors.black,
+                    color: _getCellColor(paymentIndex, payment.isFlexible!),
                   ),
                 ),
               ),
@@ -159,8 +131,8 @@ class _PaymentScheduleTableState extends State<PaymentScheduleTable> {
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        }),
         // Total Row
         DataRow(
           color: WidgetStatePropertyAll(Colors.indigo),

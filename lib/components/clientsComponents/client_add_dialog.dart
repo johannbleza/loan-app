@@ -29,6 +29,7 @@ class _ClientAddDialogState extends State<ClientAddDialog> {
   final TextEditingController _agentIdController = TextEditingController();
   final TextEditingController _agentInterestController =
       TextEditingController();
+  int isFlexible = 0;
 
   @override
   void initState() {
@@ -89,12 +90,27 @@ class _ClientAddDialogState extends State<ClientAddDialog> {
               },
             ),
             SizedBox(height: 16),
-
             SelectDateButton(
               buttonText: 'Select Loan Date',
               onDateSelected: (selectedDate) {
                 _loanDateController.text = selectedDate.toString();
               },
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Flexible Payment', style: TextStyle(fontSize: 16)),
+                SizedBox(width: 12),
+                Switch(
+                  value: isFlexible == 1,
+                  onChanged: (value) {
+                    setState(() {
+                      isFlexible = value ? 1 : 0;
+                    });
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -134,6 +150,7 @@ class _ClientAddDialogState extends State<ClientAddDialog> {
               loanDate: _loanDateController.text,
               agentId: int.parse(_agentIdController.text),
               agentInterest: double.parse(_agentInterestController.text),
+              isFlexible: isFlexible,
             );
 
             // Create the client
@@ -143,7 +160,12 @@ class _ClientAddDialogState extends State<ClientAddDialog> {
             Client recent = await clientCrud.getMostRecentClient();
 
             //Generate Payment Schedule for Client
-            await paymentCrud.generatePayments(recent);
+            if (isFlexible == 1) {
+              // await paymentCrud.generateFlexiblePayments(recent);
+              await paymentCrud.generateFlexiblePayment(recent);
+            } else {
+              await paymentCrud.generatePayments(recent);
+            }
 
             // Import to Balance Sheet
             await balanceSheetCrud.createBalanceSheet(

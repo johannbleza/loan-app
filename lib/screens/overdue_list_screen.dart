@@ -47,6 +47,7 @@ class _OverdueListScreenState extends State<OverdueListScreen> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: PaymentMonthlyTable(
+                    isOverdue: true,
                     paymentData: paymentsData,
                     refreshMonthlyPaymentTable: () {
                       getPayments();

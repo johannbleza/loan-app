@@ -9,6 +9,7 @@ class Client {
   final double agentInterest;
 
   final String? agentName;
+  final int? isFlexible;
 
   Client({
     this.clientId,
@@ -20,6 +21,7 @@ class Client {
     required this.agentId,
     required this.agentInterest,
     this.agentName,
+    this.isFlexible,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class Client {
       'loanDate': loanDate,
       'agentId': agentId,
       'agentInterest': agentInterest,
+      'isFlexible': isFlexible,
     };
   }
 
@@ -46,6 +49,7 @@ class Client {
       agentId: map['agentId'],
       agentInterest: map['agentInterest'],
       agentName: map['agentName'],
+      isFlexible: map['isFlexible'],
     );
   }
 }

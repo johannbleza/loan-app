@@ -32,6 +32,7 @@ class _SelectMonthDropdownState extends State<SelectMonthDropdown> {
         DropdownMenuEntry(label: "October", value: 10),
         DropdownMenuEntry(label: "November", value: 11),
         DropdownMenuEntry(label: "December", value: 12),
+        DropdownMenuEntry(label: "All Months", value: null),
       ],
     );
   }

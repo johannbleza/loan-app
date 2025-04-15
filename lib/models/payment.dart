@@ -19,6 +19,7 @@ class Payment {
   final double? loanAmount;
 
   final double? agentInterest;
+  final int? isFlexible;
 
   Payment({
     this.paymentId,
@@ -39,6 +40,7 @@ class Payment {
     this.loanTerm,
     this.loanAmount,
     this.agentInterest,
+    this.isFlexible,
   });
 
   Map<String, dynamic> toMap() {
@@ -77,6 +79,7 @@ class Payment {
       loanTerm: map['loanTerm'],
       loanAmount: map['loanAmount'],
       agentInterest: map['agentInterest'],
+      isFlexible: map['isFlexible'],
     );
   }
 }

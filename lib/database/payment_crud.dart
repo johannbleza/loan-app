@@ -77,12 +77,57 @@ class PaymentCrud {
     }
   }
 
+  // Generate Flexible Payments for client
+  Future<void> generateFlexiblePaymentsOld(Client client) async {
+    final db = await _databaseHelper.database;
+
+    for (int i = 0; i < client.loanTerm; i++) {
+      // Date
+      String paymentSchdule =
+          Jiffy.parse(
+            client.loanDate,
+            pattern: 'MMM d, yyyy',
+          ).add(months: i + 1).format(pattern: 'MMM d, yyyy').toString();
+
+      Payment payment = Payment(
+        paymentSchedule: paymentSchdule,
+        principalBalance: client.loanAmount,
+        monthlyPayment: 0,
+        interestPaid: 0,
+        capitalPayment: 0,
+        clientId: client.clientId!,
+        agentShare: 0,
+        remarks: 'Due',
+      );
+
+      await db.insert('payment', payment.toMap());
+    }
+  }
+
+  // Create flexible payment for client
+  Future<void> generateFlexiblePayment(Client client) async {
+    final db = await _databaseHelper.database;
+
+    Payment payment = Payment(
+      paymentSchedule: client.loanDate,
+      principalBalance: client.loanAmount,
+      monthlyPayment: 0,
+      interestPaid: 0,
+      capitalPayment: 0,
+      clientId: client.clientId!,
+      agentShare: 0,
+      remarks: 'Due',
+    );
+
+    await db.insert('payment', payment.toMap());
+  }
+
   // Get All Payments by Client ID with Interest Rate, Client Name,
   Future<List<Payment>> getAllPaymentsByClientId(int clientId) async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
-      Select p.*, c.interestRate, c.clientName, c.agentInterest
+      Select p.*, c.interestRate, c.clientName, c.agentInterest, c.isFlexible
       FROM PAYMENT AS p INNER JOIN CLIENT AS c
         ON p.clientId = c.clientId
       WHERE p.clientId = ?
@@ -178,6 +223,30 @@ class PaymentCrud {
     await db.update(
       'payment',
       {'principalBalance': principalBalance},
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Flexible Payments
+
+  // Update monthlyPayment, interestPaid, capitalPayment, agentShare, and principalBalance by paymentId
+  Future<void> updateFlexiblePayments(
+    int paymentId,
+    double monthlyPayment,
+    double interestPaid,
+    double capitalPayment,
+    double agentShare,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {
+        'monthlyPayment': monthlyPayment,
+        'interestPaid': interestPaid,
+        'capitalPayment': capitalPayment,
+        'agentShare': agentShare,
+      },
       where: 'paymentId = ?',
       whereArgs: [paymentId],
     );

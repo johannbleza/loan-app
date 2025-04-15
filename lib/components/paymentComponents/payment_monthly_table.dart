@@ -7,12 +7,14 @@ import 'package:loan_app/models/payment.dart';
 import 'package:loan_app/utils/globals.dart';
 
 class PaymentMonthlyTable extends StatefulWidget {
+  final bool? isOverdue;
   final VoidCallback refreshMonthlyPaymentTable;
   final List<Payment> paymentData;
   const PaymentMonthlyTable({
     super.key,
     required this.paymentData,
     required this.refreshMonthlyPaymentTable,
+    this.isOverdue,
   });
 
   @override
@@ -89,10 +91,14 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
             DataCell(Text("")),
             DataCell(Text("Total:", style: TextStyle(color: Colors.white))),
             DataCell(
-              MoneyText(
-                amount: calculateTotals.getTotalAmountTaken(widget.paymentData),
-                color: Colors.white,
-              ),
+              widget.isOverdue == true
+                  ? Text("")
+                  : MoneyText(
+                    amount: calculateTotals.getTotalAmountTaken(
+                      widget.paymentData,
+                    ),
+                    color: Colors.white,
+                  ),
             ),
             DataCell(
               MoneyText(
