@@ -18,108 +18,190 @@ class _ClientInfoRowState extends State<ClientInfoRow> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Client Name: "),
-                Text(
-                  widget.client.clientName,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Client Name: "),
+                    Text(
+                      widget.client.clientName,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            SizedBox(width: 40),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Loan Start Date:"),
-                Text(
-                  widget.client.loanDate,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                SizedBox(width: 40),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Loan Start Date:"),
+                    Text(
+                      widget.client.loanDate,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            SizedBox(width: 40),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Loan Amount:"),
-                Text(
-                  "₱${widget.client.loanAmount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                SizedBox(width: 40),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Loan Amount:"),
+                    Text(
+                      "₱${widget.client.loanAmount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            SizedBox(width: 40),
-            Column(
-              children: [
-                Text("Loan Term:"),
-                Text(
-                  widget.client.loanTerm.toString(),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                SizedBox(width: 40),
+                Column(
+                  children: [
+                    Text("Loan Term:"),
+                    Text(
+                      widget.client.loanTerm.toString(),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            SizedBox(width: 40),
-            Column(
-              children: [
-                Text("Interest Rate:"),
-                Text(
-                  "${widget.client.interestRate.toStringAsFixed(2)}%",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                SizedBox(width: 40),
+                Column(
+                  children: [
+                    Text("Interest Rate:"),
+                    Text(
+                      "${widget.client.interestRate.toStringAsFixed(2)}%",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            if (widget.client.isFlexible == 1) SizedBox(width: 40),
-            if (widget.client.isFlexible == 1)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Interest:"),
-                  Text(
-                    "₱${(widget.client.loanAmount * (widget.client.interestRate / 100)).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                SizedBox(width: 40),
+                if (widget.client.isFlexible == 1)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Interest:"),
+                      Text(
+                        "₱${(widget.client.loanAmount * (widget.client.interestRate / 100)).toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
 
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
+                if (widget.client.isFlexible == 0) ...[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Agent Name:"),
+                      Text(
+                        widget.client.agentName!,
+
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 40),
+                  Column(
+                    children: [
+                      Text("Agent Share:"),
+                      Text(
+                        "${widget.client.agentInterest.toStringAsFixed(2)}%",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 40),
+                  if (widget.client.isFlexible == 1)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Payment Plan:"),
+                        Text(
+                          "Flexible",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ],
+            ),
+            if (widget.client.isFlexible == 1) ...[
+              SizedBox(height: 24),
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Agent Name:"),
+                      Text(
+                        widget.client.agentName!,
+
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 40),
+                  Column(
+                    children: [
+                      Text("Agent Share:"),
+                      Text(
+                        "${widget.client.agentInterest.toStringAsFixed(2)}%",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 40),
+                  if (widget.client.isFlexible == 1)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Payment Plan:"),
+                        Text(
+                          "Flexible",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
-            SizedBox(width: 40),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Agent Name:"),
-                Text(
-                  widget.client.agentName!,
-
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-            SizedBox(width: 40),
-            Column(
-              children: [
-                Text("Agent Share:"),
-                Text(
-                  "${widget.client.agentInterest.toStringAsFixed(2)}%",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-            SizedBox(width: 40),
-            if (widget.client.isFlexible == 1)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Payment Plan:"),
-                  Text(
-                    "Flexible",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
+            ],
           ],
         ),
       ),

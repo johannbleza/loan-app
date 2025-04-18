@@ -26,15 +26,44 @@ class _ResetPaymentScheduleButtonState
         foregroundColor: Colors.white,
       ),
       onPressed: () async {
-        paymentCrud.deletePaymentByClientId(widget.client.clientId!);
-        if (widget.client.isFlexible == 1) {
-          await paymentCrud.generateFlexiblePayment(widget.client);
-        } else {
-          await paymentCrud.generatePayments(widget.client);
-        }
-        await paymentCrud.updateOverduePayments();
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Confirm Reset"),
+              content: Text(
+                "Are you sure you want to reset the payment schedule?\nThis action cannot be undone.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text("Confirm"),
+                ),
+              ],
+            );
+          },
+        );
 
-        widget.onReset();
+        if (confirm == true) {
+          paymentCrud.deletePaymentByClientId(widget.client.clientId!);
+          if (widget.client.isFlexible == 1) {
+            await paymentCrud.generateFlexiblePayment(widget.client);
+          } else {
+            await paymentCrud.generatePayments(widget.client);
+          }
+          await paymentCrud.updateOverduePayments();
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Payment schedule reset successfully.")),
+          );
+
+          widget.onReset();
+        }
       },
       child: Text("Reset Schedule"),
     );

@@ -32,9 +32,6 @@ class DatabaseHelper {
       onOpen: (db) async {
         print(path);
         await db.execute('PRAGMA foreign_keys = ON');
-        // await db.execute(
-        //   'ALTER TABLE client ADD COLUMN isFlexible INTEGER DEFAULT 0',
-        // );
       },
     );
   }

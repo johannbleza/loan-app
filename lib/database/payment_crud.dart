@@ -108,8 +108,14 @@ class PaymentCrud {
   Future<void> generateFlexiblePayment(Client client) async {
     final db = await _databaseHelper.database;
 
+    String paymentSchdule =
+        Jiffy.parse(
+          client.loanDate,
+          pattern: 'MMM d, yyyy',
+        ).add(months: 1).format(pattern: 'MMM d, yyyy').toString();
+
     Payment payment = Payment(
-      paymentSchedule: client.loanDate,
+      paymentSchedule: paymentSchdule,
       principalBalance: client.loanAmount,
       monthlyPayment: 0,
       interestPaid: 0,
@@ -175,6 +181,21 @@ class PaymentCrud {
         'capitalPayment': capitalPayment,
         'agentShare': agentShare,
       },
+      where: 'paymentId = ?',
+      whereArgs: [paymentId],
+    );
+  }
+
+  // Update Interest Paid and Capital Payment by paymentId
+  Future<void> updateInterestPaidCapitalPayment(
+    int paymentId,
+    double interestPaid,
+    double capitalPayment,
+  ) async {
+    final db = await _databaseHelper.database;
+    await db.update(
+      'payment',
+      {'interestPaid': interestPaid, 'capitalPayment': capitalPayment},
       where: 'paymentId = ?',
       whereArgs: [paymentId],
     );
@@ -282,7 +303,7 @@ class PaymentCrud {
   Future<List<Payment>> getMonthlyPayments() async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm, c.agentInterest
+      select p.*, c.clientName, a.agentName, c.agentId, c.loanAmount, c.loanTerm, c.agentInterest, c.isFlexible
       from payment as p inner join client as c
 	      on p.clientId = c.clientId
 		      inner join agent as a

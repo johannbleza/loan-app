@@ -83,6 +83,8 @@ class _EntryUpdateDialogState extends State<EntryUpdateDialog> {
             }
             balanceSheetCrud.updateBalanceSheet(
               BalanceSheet(
+                paymentId: widget.balanceSheet.paymentId,
+                clientId: widget.balanceSheet.clientId,
                 balanceSheetId: widget.balanceSheet.balanceSheetId,
                 date: _dateController.text,
                 inAmount:

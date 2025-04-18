@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:loan_app/database/agent_crud.dart';
-// import 'package:loan_app/database/agent_crud.dart';
 import 'package:loan_app/database/database.dart';
 import 'package:loan_app/screens/agent_list_screen.dart';
 import 'package:loan_app/screens/balance_sheet_list_screen.dart';
@@ -8,14 +7,17 @@ import 'package:loan_app/screens/client_list_screen.dart';
 import 'package:loan_app/screens/home_overview_screen.dart';
 import 'package:loan_app/screens/monthly_report_screen.dart';
 import 'package:loan_app/screens/overdue_list_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // sqfliteFfiInit();
-  // databaseFactory = databaseFactoryFfi;
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   await DatabaseHelper().database;
   runApp(const MyApp());
 }
+
+void sqfliteFfiInit() {}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

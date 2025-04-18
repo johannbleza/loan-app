@@ -229,7 +229,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: flexibleMonthlyPayment,
                   remarks:
-                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM d, yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
@@ -267,7 +267,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.monthlyPayment,
                   remarks:
-                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM d, yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
@@ -280,7 +280,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.interestPaid,
                   remarks:
-                      '${widget.payment.clientName} - Partial (Interest) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Partial (Interest) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM d, yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );
@@ -330,15 +330,27 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   payment.principalBalance,
                 );
               }
-              // // Adjust Balance
+
+              // // Adjust Interest Paid
               // for (Payment payment in widget.paymentsData!.sublist(
               //   widget.paymentsData!.indexOf(widget.payment),
               // )) {
-              //   await paymentCrud.updatePrincipalBalanceByPaymentId(
+              //   await paymentCrud.updateInterestPaidCapitalPayment(
               //     payment.paymentId! + 1,
-              //     payment.principalBalance,
+              //     payment.interestPaid,
+              //     payment.capitalPayment,
               //   );
               // }
+
+              // Adjust Balance
+              for (Payment payment in widget.paymentsData!.sublist(
+                widget.paymentsData!.indexOf(widget.payment),
+              )) {
+                await paymentCrud.updatePrincipalBalanceByPaymentId(
+                  payment.paymentId! + 1,
+                  payment.principalBalance,
+                );
+              }
             } else if (_remarksController.text == 'Partial (Capital)') {
               balanceSheetCrud.createBalanceSheet(
                 BalanceSheet(
@@ -347,7 +359,7 @@ class _PaymentUpdateDialogState extends State<PaymentUpdateDialog> {
                   outAmount: 0,
                   balance: widget.payment.capitalPayment,
                   remarks:
-                      '${widget.payment.clientName} - Partial (Capital) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM yyyy')}',
+                      '${widget.payment.clientName} - Partial (Capital) Payment for ${Jiffy.parse(widget.payment.paymentSchedule, pattern: 'MMM d, yyyy').format(pattern: 'MMM d, yyyy')}',
                   paymentId: widget.payment.paymentId,
                 ),
               );

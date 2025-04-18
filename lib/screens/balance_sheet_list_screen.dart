@@ -75,11 +75,14 @@ class _BalanceSheetListScreenState extends State<BalanceSheetListScreen> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
                 ),
                 SizedBox(height: 20),
-                BalanceSheetTable(
-                  balanceSheetData: balanceSheetData,
-                  refreshBalanceSheetTable: () {
-                    getBalanceSheet();
-                  },
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: BalanceSheetTable(
+                    balanceSheetData: balanceSheetData,
+                    refreshBalanceSheetTable: () {
+                      getBalanceSheet();
+                    },
+                  ),
                 ),
                 SizedBox(height: 40),
               ],

@@ -75,6 +75,7 @@ class _PaymentMonthlyTableState extends State<PaymentMonthlyTable> {
               ),
               DataCell(
                 PaymentUpdateButton(
+                  showFullyPaidOption: payment.isFlexible == 1 ? true : false,
                   payment: payment,
                   paymentsData: widget.paymentData,
                   onPaymentStatusUpdated: widget.refreshMonthlyPaymentTable,
